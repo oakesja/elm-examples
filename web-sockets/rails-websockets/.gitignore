@@ -1,0 +1,7 @@
+/.bundle
+/log/*
+/tmp/*
+!/log/.keep
+!/tmp/.keep
+elm-stuff
+/app/assets/javascripts/elm.js
