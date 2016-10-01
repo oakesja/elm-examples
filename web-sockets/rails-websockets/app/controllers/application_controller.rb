@@ -4,4 +4,8 @@ class ApplicationController < ActionController::Base
   def index
     render :index
   end
+
+  def ports
+    render :ports
+  end
 end

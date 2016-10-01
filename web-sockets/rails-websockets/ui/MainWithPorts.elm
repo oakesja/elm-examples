@@ -1,4 +1,4 @@
-port module Main exposing (main)
+port module MainWithPorts exposing (main)
 
 import Html.App
 import Model exposing (..)

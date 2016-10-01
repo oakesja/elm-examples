@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>RailsWebsockets</title>
+        <%= csrf_meta_tags %>
+
+        <%= javascript_include_tag 'cable', 'data-turbolinks-track': 'reload' %>
+        <%= javascript_include_tag 'MainWithPorts', 'data-turbolinks-track': 'reload' %>
+    </head>
+
+    <body>
+        <script>
+            var elmApp = Elm.MainWithPorts.fullscreen();
+            var allMessages = App.all_messages = App.cable.subscriptions.create("AllMessagesChannel", {
+                connected: function () {
+                    elmApp.ports.connected.send('all');
+                },
+
+                disconnected: function () {
+                    elmApp.ports.disconnected.send('all');
+                },
+
+                received: function (data) {
+                    elmApp.ports.addMsg.send({streamName: 'all', msg: data});
+                },
+
+                sendMessage: function () {
+                    return this.perform('sendMessage');
+                }
+            });
+            var personalMsgs = App.personal_messages = App.cable.subscriptions.create("PersonalMessagesChannel", {
+                connected: function () {
+                    elmApp.ports.disconnected.send('personal');
+                },
+                disconnected: function () {
+                    elmApp.ports.disconnected.send('personal');
+                },
+                received: function (data) {
+                    elmApp.ports.addMsg.send({streamName: 'personal', msg: data});
+                },
+
+                sendMessage: function () {
+                    return this.perform('sendMessage');
+                }
+            });
+            elmApp.ports.sendMessageToAll.subscribe(function () {
+                allMessages.sendMessage();
+            });
+            elmApp.ports.sendMessageToSelf.subscribe(function () {
+                personalMsgs.sendMessage();
+            });
+        </script>
+    </body>
+</html>
