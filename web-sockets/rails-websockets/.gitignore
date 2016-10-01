@@ -4,5 +4,5 @@
 !/log/.keep
 !/tmp/.keep
 elm-stuff
-/app/assets/javascripts/elm.js
+/app/assets/javascripts/MainWithPorts.js
 /.idea

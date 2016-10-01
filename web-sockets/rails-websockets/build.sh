@@ -1,1 +1,0 @@
-elm-make ui/Main.elm --output app/assets/javascripts/elm.js --yes

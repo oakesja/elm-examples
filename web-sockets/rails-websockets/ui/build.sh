@@ -1,0 +1,1 @@
+elm-make ui/MainWithPorts.elm --output app/assets/javascripts/MainWithPorts.js --yes
