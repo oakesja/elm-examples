@@ -5,12 +5,52 @@
         <%= csrf_meta_tags %>
 
         <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
-        <%= javascript_include_tag 'elm', 'data-turbolinks-track': 'reload' %>
+        <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
     </head>
 
     <body>
         <script>
-            Elm.Main.fullscreen();
+            var elmApp = Elm.Main.fullscreen();
+            var allMessages = App.all_messages = App.cable.subscriptions.create("AllMessagesChannel", {
+                connected: function () {
+                    elmApp.ports.connected.send('all');
+                },
+
+                disconnected: function () {
+                    elmApp.ports.disconnected.send('all');
+                },
+
+                received: function (data) {
+                    elmApp.ports.addMsg.send({streamName: 'all', msg: data});
+                },
+
+                sendMessage: function () {
+                    return this.perform('sendMessage');
+                }
+            });
+            var personalMsgs = App.personal_messages = App.cable.subscriptions.create("PersonalMessagesChannel", {
+                connected: function () {
+                    elmApp.ports.connected.send('personal');
+                },
+
+                disconnected: function () {
+                    elmApp.ports.disconnected.send('personal');
+                },
+
+                received: function (data) {
+                    elmApp.ports.addMsg.send({streamName: 'personal', msg: data});
+                },
+
+                sendMessage: function () {
+                    return this.perform('sendMessage');
+                }
+            });
+            elmApp.ports.sendMessageToAll.subscribe(function () {
+                allMessages.sendMessage();
+            });
+            elmApp.ports.sendMessageToSelf.subscribe(function () {
+                personalMsgs.sendMessage();
+            });
         </script>
     </body>
 </html>
