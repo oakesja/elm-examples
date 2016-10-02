@@ -1,24 +1,20 @@
-# README
+# TODO
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+- disconnected does not work as expected with ports
 
-Things you may want to cover:
+types of messages
 
-* Ruby version
+- "confirmation": "confirm_subscription",
+- "rejection": "reject_subscription"
+- "welcome": "welcome",
+- "ping": "ping"
+- else actual message
 
-* System dependencies
+type of callbacks
 
-* Configuration
+- connected - tell by "confirm_subscription"
+- disconnected - websocket library will tell (lowlevel)
+- received message - will need a decoder
+- rejected by server - "reject_subscription" equivalent to unauthorized
 
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+sending actions to server needs to match up

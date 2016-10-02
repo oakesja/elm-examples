@@ -38,6 +38,24 @@ connectToChannel name =
                 ]
 
 
+sendMessageToChannel : String -> Cmd Msg
+sendMessageToChannel name =
+    WebSocket.send socketUrl <|
+        Json.Encode.encode 0 <|
+            Json.Encode.object
+                [ ( "command", Json.Encode.string "message" )
+                , ( "identifier"
+                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
+                  )
+                , ( "data"
+                  , Json.Encode.string <|
+                        Json.Encode.encode 0 <|
+                            Json.Encode.object
+                                [ ( "action", Json.Encode.string "sendMessage" ) ]
+                  )
+                ]
+
+
 socketUrl : String
 socketUrl =
     "ws://localhost:3000/cable"
@@ -46,6 +64,7 @@ socketUrl =
 type SocketMsg
     = Ping
     | ConnectedToChannel String
+    | Recieved String Message
     | Unknown
 
 
@@ -58,7 +77,7 @@ update msg model =
                     Debug.log "raw message" message
 
                 decodeMsg msgType =
-                    case msgType of
+                    case Debug.log "msgType" msgType of
                         "ping" ->
                             Json.Decode.succeed Ping
 
@@ -71,7 +90,21 @@ update msg model =
                             Json.Decode.succeed Unknown
 
                 decoder =
-                    ("type" := Json.Decode.string) `andThen` decodeMsg
+                    Json.Decode.oneOf
+                        [ ("type" := Json.Decode.string) `andThen` decodeMsg
+                        , Json.Decode.object2 Recieved
+                            (Json.Decode.customDecoder
+                                ("identifier" := Json.Decode.string)
+                             <|
+                                Json.Decode.decodeString ("channel" := Json.Decode.string)
+                            )
+                          <|
+                            Json.Decode.at [ "message" ] <|
+                                Json.Decode.object2 Message
+                                    ("userId" := Json.Decode.string)
+                                    ("msg" := Json.Decode.string)
+                        , Json.Decode.fail <| "Failed to decode: " ++ message
+                        ]
 
                 decodedMsg =
                     Result.withDefault Unknown <|
@@ -92,14 +125,25 @@ update msg model =
                             _ ->
                                 model ! []
 
+                    Recieved channel message ->
+                        case channel of
+                            "AllMessagesChannel" ->
+                                { model | allMsgs = model.allMsgs ++ [ message ] } ! []
+
+                            "PersonalMessagesChannel" ->
+                                { model | personalMsgs = model.personalMsgs ++ [ message ] } ! []
+
+                            _ ->
+                                model ! []
+
                     _ ->
                         model ! []
 
         SendMsgToAll ->
-            model ! []
+            model ! [ sendMessageToChannel "AllMessagesChannel" ]
 
         SendMsgToSelf ->
-            model ! []
+            model ! [ sendMessageToChannel "PersonalMessagesChannel" ]
 
 
 subscriptions : Model -> Sub Msg

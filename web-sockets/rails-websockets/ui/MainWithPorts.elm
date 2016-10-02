@@ -37,10 +37,10 @@ update msg model =
         DisconnectedFrom streamName ->
             case streamName of
                 "all" ->
-                    { model | personalStatus = Disconnected } ! []
+                    { model | allStatus = Disconnected } ! []
 
                 _ ->
-                    { model | personalStatus = Connected } ! []
+                    { model | personalStatus = Disconnected } ! []
 
         AddMsg { streamName, msg } ->
             case streamName of
