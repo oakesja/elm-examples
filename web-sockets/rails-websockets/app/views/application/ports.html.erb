@@ -21,7 +21,7 @@
                 },
 
                 received: function (data) {
-                    elmApp.ports.addMsg.send({streamName: 'all', msg: data});
+                    elmApp.ports.receiveEvent.send({streamName: 'all', event: data});
                 },
 
                 sendMessage: function () {
@@ -30,23 +30,23 @@
             });
             var personalMsgs = App.personal_messages = App.cable.subscriptions.create("PersonalMessagesChannel", {
                 connected: function () {
-                    elmApp.ports.disconnected.send('personal');
+                    elmApp.ports.connected.send('personal');
                 },
                 disconnected: function () {
                     elmApp.ports.disconnected.send('personal');
                 },
                 received: function (data) {
-                    elmApp.ports.addMsg.send({streamName: 'personal', msg: data});
+                    elmApp.ports.receiveEvent.send({streamName: 'personal', event: data});
                 },
 
                 sendMessage: function () {
                     return this.perform('sendMessage');
                 }
             });
-            elmApp.ports.sendMessageToAll.subscribe(function () {
+            elmApp.ports.sendEventToAll.subscribe(function () {
                 allMessages.sendMessage();
             });
-            elmApp.ports.sendMessageToSelf.subscribe(function () {
+            elmApp.ports.sendEventToSelf.subscribe(function () {
                 personalMsgs.sendMessage();
             });
         </script>

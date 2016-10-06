@@ -18,8 +18,8 @@ init : ( Model, Cmd Msg )
 init =
     { allStatus = Disconnected
     , personalStatus = Disconnected
-    , allMsgs = []
-    , personalMsgs = []
+    , allEvents = []
+    , personalEvents = []
     }
         ! [ connectToChannel "AllMessagesChannel"
           , connectToChannel "PersonalMessagesChannel"
@@ -64,7 +64,7 @@ socketUrl =
 type SocketMsg
     = Ping
     | ConnectedToChannel String
-    | Recieved String Message
+    | Recieved String Event
     | Unknown
 
 
@@ -100,7 +100,7 @@ update msg model =
                             )
                           <|
                             Json.Decode.at [ "message" ] <|
-                                Json.Decode.object2 Message
+                                Json.Decode.object2 Event
                                     ("userId" := Json.Decode.string)
                                     ("msg" := Json.Decode.string)
                         , Json.Decode.fail <| "Failed to decode: " ++ message
@@ -125,13 +125,13 @@ update msg model =
                             _ ->
                                 model ! []
 
-                    Recieved channel message ->
+                    Recieved channel event ->
                         case channel of
                             "AllMessagesChannel" ->
-                                { model | allMsgs = model.allMsgs ++ [ message ] } ! []
+                                { model | allEvents = model.allEvents ++ [ event ] } ! []
 
                             "PersonalMessagesChannel" ->
-                                { model | personalMsgs = model.personalMsgs ++ [ message ] } ! []
+                                { model | personalEvents = model.personalEvents ++ [ event ] } ! []
 
                             _ ->
                                 model ! []

@@ -8,7 +8,7 @@ import View exposing (..)
 type Msg
     = ConnectedTo String
     | DisconnectedFrom String
-    | AddMsg StreamMsg
+    | AddMsg StreamEvent
     | SendMsgToAll
     | SendMsgToSelf
 
@@ -17,8 +17,8 @@ init : ( Model, Cmd Msg )
 init =
     { allStatus = Disconnected
     , personalStatus = Disconnected
-    , allMsgs = []
-    , personalMsgs = []
+    , allEvents = []
+    , personalEvents = []
     }
         ! []
 
@@ -42,24 +42,24 @@ update msg model =
                 _ ->
                     { model | personalStatus = Disconnected } ! []
 
-        AddMsg { streamName, msg } ->
+        AddMsg { streamName, event } ->
             case streamName of
                 "all" ->
-                    { model | allMsgs = model.allMsgs ++ [ msg ] } ! []
+                    { model | allEvents = model.allEvents ++ [ event ] } ! []
 
                 _ ->
-                    { model | personalMsgs = model.personalMsgs ++ [ msg ] } ! []
+                    { model | personalEvents = model.personalEvents ++ [ event ] } ! []
 
         SendMsgToAll ->
-            model ! [ sendMessageToAll () ]
+            model ! [ sendEventToAll () ]
 
         SendMsgToSelf ->
-            model ! [ sendMessageToSelf () ]
+            model ! [ sendEventToSelf () ]
 
 
-type alias StreamMsg =
+type alias StreamEvent =
     { streamName : String
-    , msg : Message
+    , event : Event
     }
 
 
@@ -69,13 +69,13 @@ port connected : (String -> msg) -> Sub msg
 port disconnected : (String -> msg) -> Sub msg
 
 
-port addMsg : (StreamMsg -> msg) -> Sub msg
+port receiveEvent : (StreamEvent -> msg) -> Sub msg
 
 
-port sendMessageToAll : () -> Cmd msg
+port sendEventToAll : () -> Cmd msg
 
 
-port sendMessageToSelf : () -> Cmd msg
+port sendEventToSelf : () -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -83,7 +83,7 @@ subscriptions model =
     Sub.batch
         [ connected ConnectedTo
         , disconnected DisconnectedFrom
-        , addMsg AddMsg
+        , receiveEvent AddMsg
         ]
 
 

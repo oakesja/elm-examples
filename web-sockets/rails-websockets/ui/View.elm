@@ -21,20 +21,20 @@ view config model =
             , ( "justify-content", "space-around" )
             ]
         ]
-        [ msgsView "all messages" model.allStatus model.allMsgs config.sendMsgToAll
-        , msgsView "personal messages" model.personalStatus model.personalMsgs config.sendMsgToSelf
+        [ eventsView "all messages" model.allStatus model.allEvents config.sendMsgToAll
+        , eventsView "personal messages" model.personalStatus model.personalEvents config.sendMsgToSelf
         ]
 
 
-msgsView : String -> Status -> List Message -> msg -> Html msg
-msgsView name status msgs sendMsg =
+eventsView : String -> Status -> List Event -> msg -> Html msg
+eventsView name status events sendMsg =
     case status of
         Connected ->
             div
                 []
                 [ text <| "Currently connected to " ++ name
                 , div [] <|
-                    List.map msgView msgs
+                    List.map eventView events
                 , button
                     [ onClick sendMsg ]
                     [ text "send" ]
@@ -44,7 +44,7 @@ msgsView name status msgs sendMsg =
             text <| "Currently disconnected from " ++ name
 
 
-msgView : Message -> Html msg
-msgView msg =
+eventView : Event -> Html msg
+eventView event =
     div []
-        [ text <| msg.userId ++ " - " ++ msg.msg ]
+        [ text <| event.userId ++ " - " ++ event.msg ]

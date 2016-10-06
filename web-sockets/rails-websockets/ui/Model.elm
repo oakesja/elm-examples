@@ -6,7 +6,7 @@ type Status
     | Disconnected
 
 
-type alias Message =
+type alias Event =
     { userId : String
     , msg : String
     }
@@ -15,6 +15,6 @@ type alias Message =
 type alias Model =
     { allStatus : Status
     , personalStatus : Status
-    , allMsgs : List Message
-    , personalMsgs : List Message
+    , allEvents : List Event
+    , personalEvents : List Event
     }
