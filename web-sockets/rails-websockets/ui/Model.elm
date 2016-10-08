@@ -9,12 +9,18 @@ type Status
 type alias Event =
     { userId : String
     , msg : String
+    , action : String
     }
 
 
 type alias Model =
-    { allStatus : Status
-    , personalStatus : Status
-    , allEvents : List Event
-    , personalEvents : List Event
+    { status : Status
+    , events : List Event
+    }
+
+
+init : Model
+init =
+    { status = Disconnected
+    , events = []
     }

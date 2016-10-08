@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Using elm-lang/websocket</title>
+        <%= csrf_meta_tags %>
+        <%= javascript_include_tag 'cable', 'data-turbolinks-track': 'reload' %>
+        <%= javascript_include_tag 'MainUsingWebSocket', 'data-turbolinks-track': 'reload' %>
+    </head>
+
+    <body>
+        <script>
+            Elm.MainUsingWebSocket.fullscreen();
+        </script>
+    </body>
+</html>

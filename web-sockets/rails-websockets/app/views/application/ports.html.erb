@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>RailsWebsockets</title>
+        <title>Using Ports</title>
         <%= csrf_meta_tags %>
-
         <%= javascript_include_tag 'cable', 'data-turbolinks-track': 'reload' %>
         <%= javascript_include_tag 'MainWithPorts', 'data-turbolinks-track': 'reload' %>
     </head>
@@ -11,43 +10,25 @@
     <body>
         <script>
             var elmApp = Elm.MainWithPorts.fullscreen();
-            var allMessages = App.all_messages = App.cable.subscriptions.create("AllMessagesChannel", {
+            App.all_messages = App.cable.subscriptions.create("AllMessagesChannel", {
                 connected: function () {
-                    elmApp.ports.connected.send('all');
+                    elmApp.ports.connected.send('');
                 },
 
                 disconnected: function () {
-                    elmApp.ports.disconnected.send('all');
+                    elmApp.ports.disconnected.send('');
                 },
 
                 received: function (data) {
-                    elmApp.ports.receiveEvent.send({streamName: 'all', event: data});
+                    elmApp.ports.receiveEvent.send(data);
                 },
 
                 sendMessage: function () {
                     return this.perform('sendMessage');
                 }
             });
-            var personalMsgs = App.personal_messages = App.cable.subscriptions.create("PersonalMessagesChannel", {
-                connected: function () {
-                    elmApp.ports.connected.send('personal');
-                },
-                disconnected: function () {
-                    elmApp.ports.disconnected.send('personal');
-                },
-                received: function (data) {
-                    elmApp.ports.receiveEvent.send({streamName: 'personal', event: data});
-                },
-
-                sendMessage: function () {
-                    return this.perform('sendMessage');
-                }
-            });
-            elmApp.ports.sendEventToAll.subscribe(function () {
-                allMessages.sendMessage();
-            });
-            elmApp.ports.sendEventToSelf.subscribe(function () {
-                personalMsgs.sendMessage();
+            elmApp.ports.sendMsg.subscribe(function () {
+                App.all_messages.sendMessage();
             });
         </script>
     </body>

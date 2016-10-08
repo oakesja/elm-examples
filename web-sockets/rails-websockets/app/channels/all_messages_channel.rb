@@ -13,6 +13,11 @@ class AllMessagesChannel < ApplicationCable::Channel
   end
 
   def broadcast_action(action)
-    AllMessagesChannel.broadcast_to('all_messages', userId: current_user_id, msg: action)
+    AllMessagesChannel.broadcast_to(
+      'all_messages',
+      userId: @connection.current_user_id,
+      action: action,
+      msg: ''
+    )
   end
 end

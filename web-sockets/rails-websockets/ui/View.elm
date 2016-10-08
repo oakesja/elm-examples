@@ -7,8 +7,7 @@ import Model exposing (..)
 
 
 type alias Config msg =
-    { sendMsgToAll : msg
-    , sendMsgToSelf : msg
+    { sendMsg : msg
     }
 
 
@@ -21,30 +20,29 @@ view config model =
             , ( "justify-content", "space-around" )
             ]
         ]
-        [ eventsView "all messages" model.allStatus model.allEvents config.sendMsgToAll
-        , eventsView "personal messages" model.personalStatus model.personalEvents config.sendMsgToSelf
+        [ eventsView config model
         ]
 
 
-eventsView : String -> Status -> List Event -> msg -> Html msg
-eventsView name status events sendMsg =
-    case status of
+eventsView : Config msg -> Model -> Html msg
+eventsView config model =
+    case model.status of
         Connected ->
             div
                 []
-                [ text <| "Currently connected to " ++ name
+                [ text "Currently connected to channel"
                 , div [] <|
-                    List.map eventView events
+                    List.map eventView model.events
                 , button
-                    [ onClick sendMsg ]
+                    [ onClick config.sendMsg ]
                     [ text "send" ]
                 ]
 
         Disconnected ->
-            text <| "Currently disconnected from " ++ name
+            text "Currently disconnected from channel"
 
 
 eventView : Event -> Html msg
 eventView event =
     div []
-        [ text <| event.userId ++ " - " ++ event.msg ]
+        [ text <| event.userId ++ " - " ++ event.action ]

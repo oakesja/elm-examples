@@ -5,6 +5,14 @@ class ApplicationController < ActionController::Base
     render :index
   end
 
+  def using_rails_websocket
+    render :using_rails_websocket
+  end
+
+  def using_websocket
+    render :using_websocket
+  end
+
   def ports
     render :ports
   end

@@ -1,4 +1,4 @@
-module MainWithSockets exposing (main)
+module MainUsingWebSocket exposing (main)
 
 import Html.App
 import Model exposing (..)
@@ -10,19 +10,13 @@ import Json.Decode exposing (andThen, (:=))
 
 type Msg
     = ReceivedMessage String
-    | SendMsgToAll
-    | SendMsgToSelf
+    | SendMsg
 
 
 init : ( Model, Cmd Msg )
 init =
-    { allStatus = Disconnected
-    , personalStatus = Disconnected
-    , allEvents = []
-    , personalEvents = []
-    }
+    Model.init
         ! [ connectToChannel "AllMessagesChannel"
-          , connectToChannel "PersonalMessagesChannel"
           ]
 
 
@@ -73,11 +67,8 @@ update msg model =
     case msg of
         ReceivedMessage message ->
             let
-                _ =
-                    Debug.log "raw message" message
-
                 decodeMsg msgType =
-                    case Debug.log "msgType" msgType of
+                    case msgType of
                         "ping" ->
                             Json.Decode.succeed Ping
 
@@ -100,27 +91,22 @@ update msg model =
                             )
                           <|
                             Json.Decode.at [ "message" ] <|
-                                Json.Decode.object2 Event
+                                Json.Decode.object3 Event
                                     ("userId" := Json.Decode.string)
                                     ("msg" := Json.Decode.string)
+                                    ("action" := Json.Decode.string)
                         , Json.Decode.fail <| "Failed to decode: " ++ message
                         ]
 
                 decodedMsg =
                     Result.withDefault Unknown <|
                         Json.Decode.decodeString decoder message
-
-                _ =
-                    Debug.log "decoded message" decodedMsg
             in
                 case decodedMsg of
                     ConnectedToChannel channel ->
                         case channel of
                             "AllMessagesChannel" ->
-                                { model | allStatus = Connected } ! []
-
-                            "PersonalMessagesChannel" ->
-                                { model | personalStatus = Connected } ! []
+                                { model | status = Connected } ! []
 
                             _ ->
                                 model ! []
@@ -128,10 +114,7 @@ update msg model =
                     Recieved channel event ->
                         case channel of
                             "AllMessagesChannel" ->
-                                { model | allEvents = model.allEvents ++ [ event ] } ! []
-
-                            "PersonalMessagesChannel" ->
-                                { model | personalEvents = model.personalEvents ++ [ event ] } ! []
+                                { model | events = model.events ++ [ event ] } ! []
 
                             _ ->
                                 model ! []
@@ -139,11 +122,8 @@ update msg model =
                     _ ->
                         model ! []
 
-        SendMsgToAll ->
+        SendMsg ->
             model ! [ sendMessageToChannel "AllMessagesChannel" ]
-
-        SendMsgToSelf ->
-            model ! [ sendMessageToChannel "PersonalMessagesChannel" ]
 
 
 subscriptions : Model -> Sub Msg
@@ -157,9 +137,5 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view =
-            view
-                { sendMsgToAll = SendMsgToAll
-                , sendMsgToSelf = SendMsgToSelf
-                }
+        , view = view { sendMsg = SendMsg }
         }
