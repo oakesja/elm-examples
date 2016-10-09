@@ -11,48 +11,14 @@ import Json.Decode exposing (andThen, (:=))
 type Msg
     = ReceivedMessage String
     | SendMsg
+    | Input String
+    | ConnectTo
+    | DisconnectFrom
 
 
 init : ( Model, Cmd Msg )
 init =
-    Model.init
-        ! [ connectToChannel "AllMessagesChannel"
-          ]
-
-
-connectToChannel : String -> Cmd Msg
-connectToChannel name =
-    WebSocket.send socketUrl <|
-        Json.Encode.encode 0 <|
-            Json.Encode.object
-                [ ( "command", Json.Encode.string "subscribe" )
-                , ( "identifier"
-                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
-                  )
-                ]
-
-
-sendMessageToChannel : String -> Cmd Msg
-sendMessageToChannel name =
-    WebSocket.send socketUrl <|
-        Json.Encode.encode 0 <|
-            Json.Encode.object
-                [ ( "command", Json.Encode.string "message" )
-                , ( "identifier"
-                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
-                  )
-                , ( "data"
-                  , Json.Encode.string <|
-                        Json.Encode.encode 0 <|
-                            Json.Encode.object
-                                [ ( "action", Json.Encode.string "sendMessage" ) ]
-                  )
-                ]
-
-
-socketUrl : String
-socketUrl =
-    "ws://localhost:3000/cable"
+    Model.init ! []
 
 
 type SocketMsg
@@ -123,7 +89,67 @@ update msg model =
                         model ! []
 
         SendMsg ->
-            model ! [ sendMessageToChannel "AllMessagesChannel" ]
+            model ! [ sendMessageToChannel "AllMessagesChannel" model.msgToSend ]
+
+        Input msg ->
+            { model | msgToSend = msg } ! []
+
+        ConnectTo ->
+            model ! [ connectToChannel "AllMessagesChannel" ]
+
+        DisconnectFrom ->
+            { model | status = Disconnected, events = [] }
+                ! [ disconnectFromChannel "AllMessagesChannel" ]
+
+
+connectToChannel : String -> Cmd Msg
+connectToChannel name =
+    WebSocket.send socketUrl <|
+        Json.Encode.encode 0 <|
+            Json.Encode.object
+                [ ( "command", Json.Encode.string "subscribe" )
+                , ( "identifier"
+                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
+                  )
+                ]
+
+
+disconnectFromChannel : String -> Cmd Msg
+disconnectFromChannel name =
+    WebSocket.send socketUrl <|
+        Json.Encode.encode 0 <|
+            Json.Encode.object
+                [ ( "command", Json.Encode.string "unsubscribe" )
+                , ( "identifier"
+                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
+                  )
+                ]
+
+
+sendMessageToChannel : String -> String -> Cmd Msg
+sendMessageToChannel name msg =
+    WebSocket.send socketUrl <|
+        Json.Encode.encode 0 <|
+            Json.Encode.object
+                [ ( "command", Json.Encode.string "message" )
+                , ( "identifier"
+                  , Json.Encode.string <| "{\"channel\":\"" ++ name ++ "\"}"
+                  )
+                , ( "data"
+                  , Json.Encode.string <|
+                        Debug.log "data" <|
+                            Json.Encode.encode 0 <|
+                                Json.Encode.object
+                                    [ ( "action", Json.Encode.string "sendMessage" )
+                                    , ( "msg", Json.Encode.string msg )
+                                    ]
+                  )
+                ]
+
+
+socketUrl : String
+socketUrl =
+    "ws://localhost:3000/cable"
 
 
 subscriptions : Model -> Sub Msg
@@ -137,5 +163,11 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view { sendMsg = SendMsg }
+        , view =
+            view
+                { sendMsg = SendMsg
+                , onInput = Input
+                , disconnect = DisconnectFrom
+                , connect = ConnectTo
+                }
         }

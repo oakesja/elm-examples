@@ -10,7 +10,7 @@
     <body>
         <script>
             var elmApp = Elm.MainWithPorts.fullscreen();
-            App.all_messages = App.cable.subscriptions.create("AllMessagesChannel", {
+            var channel = App.cable.subscriptions.create("AllMessagesChannel", {
                 connected: function () {
                     elmApp.ports.connected.send('');
                 },
@@ -23,12 +23,18 @@
                     elmApp.ports.receiveEvent.send(data);
                 },
 
-                sendMessage: function () {
-                    return this.perform('sendMessage');
+                sendMessage: function (msg) {
+                    return this.perform('sendMessage', {msg: msg});
                 }
             });
-            elmApp.ports.sendMsg.subscribe(function () {
-                App.all_messages.sendMessage();
+            elmApp.ports.sendMsg.subscribe(function (msg) {
+                channel.sendMessage(msg);
+            });
+            elmApp.ports.connect.subscribe(function () {
+                App.cable.subscriptions.add(channel);
+            });
+            elmApp.ports.disconnect.subscribe(function () {
+                App.cable.subscriptions.remove(channel);
             });
         </script>
     </body>

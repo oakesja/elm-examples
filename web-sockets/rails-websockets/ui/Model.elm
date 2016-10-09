@@ -16,6 +16,7 @@ type alias Event =
 type alias Model =
     { status : Status
     , events : List Event
+    , msgToSend : String
     }
 
 
@@ -23,4 +24,5 @@ init : Model
 init =
     { status = Disconnected
     , events = []
+    , msgToSend = ""
     }

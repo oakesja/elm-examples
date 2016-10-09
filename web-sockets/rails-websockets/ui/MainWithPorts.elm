@@ -10,6 +10,9 @@ type Msg
     | DisconnectedFrom
     | ReceivedEvent Event
     | SendMsg
+    | Input String
+    | ConnectTo
+    | DisconnectFrom
 
 
 init : ( Model, Cmd Msg )
@@ -30,7 +33,17 @@ update msg model =
             { model | events = model.events ++ [ event ] } ! []
 
         SendMsg ->
-            model ! [ sendMsg () ]
+            model ! [ sendMsg model.msgToSend ]
+
+        Input msg ->
+            { model | msgToSend = msg } ! []
+
+        ConnectTo ->
+            model ! [ connect () ]
+
+        DisconnectFrom ->
+            { model | status = Disconnected, events = [] }
+                ! [ disconnect () ]
 
 
 port connected : (String -> msg) -> Sub msg
@@ -42,7 +55,13 @@ port disconnected : (String -> msg) -> Sub msg
 port receiveEvent : (Event -> msg) -> Sub msg
 
 
-port sendMsg : () -> Cmd msg
+port sendMsg : String -> Cmd msg
+
+
+port connect : () -> Cmd msg
+
+
+port disconnect : () -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -60,5 +79,11 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view { sendMsg = SendMsg }
+        , view =
+            view
+                { sendMsg = SendMsg
+                , onInput = Input
+                , disconnect = DisconnectFrom
+                , connect = ConnectTo
+                }
         }

@@ -8,16 +8,16 @@ class AllMessagesChannel < ApplicationCable::Channel
     broadcast_action('offline')
   end
 
-  def sendMessage
-    broadcast_action('sent message')
+  def sendMessage(data)
+    broadcast_action('sent message', data['msg'])
   end
 
-  def broadcast_action(action)
+  def broadcast_action(action, msg = '')
     AllMessagesChannel.broadcast_to(
       'all_messages',
       userId: @connection.current_user_id,
       action: action,
-      msg: ''
+      msg: msg
     )
   end
 end

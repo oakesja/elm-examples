@@ -9,7 +9,8 @@ import Json.Encode
 -- validate channels given
 -- validate unique names
 -- too much wiring, socket url and channels needed all over the place
--- figure out how to handle disconnect
+-- messages are still received when disconnected
+-- sending messages when actually disconnected?
 
 
 type alias Channel a msg =
@@ -26,10 +27,6 @@ listen url noOp channels =
     WebSocket.listen url (channelListener noOp channels)
 
 
-
---  TODO need a disconnect
-
-
 connect : String -> Channel a msg -> Cmd msg
 connect url channel =
     WebSocket.send url <|
@@ -42,12 +39,20 @@ connect url channel =
                 ]
 
 
+disconnect : String -> Channel a msg -> Cmd msg
+disconnect url channel =
+    WebSocket.send url <|
+        Json.Encode.encode 0 <|
+            Json.Encode.object
+                [ ( "command", Json.Encode.string "unsubscribe" )
+                , ( "identifier"
+                  , Json.Encode.string <| "{\"channel\":\"" ++ channel.name ++ "\"}"
+                  )
+                ]
 
--- TODO need to handle data
 
-
-perform : String -> String -> Channel a msg -> Cmd msg
-perform url action channel =
+perform : String -> Channel a msg -> String -> List ( String, Json.Encode.Value ) -> Cmd msg
+perform url channel action data =
     WebSocket.send url <|
         Json.Encode.encode 0 <|
             Json.Encode.object
@@ -58,8 +63,9 @@ perform url action channel =
                 , ( "data"
                   , Json.Encode.string <|
                         Json.Encode.encode 0 <|
-                            Json.Encode.object
+                            Json.Encode.object <|
                                 [ ( "action", Json.Encode.string action ) ]
+                                    ++ data
                   )
                 ]
 

@@ -5,6 +5,7 @@ import Model exposing (..)
 import View exposing (..)
 import RailsWebSocket exposing (Channel)
 import Json.Decode as Json exposing (Decoder, (:=))
+import Json.Encode
 
 
 type Msg
@@ -13,12 +14,14 @@ type Msg
     | ReceivedEvent Event
     | SendMsg
     | NoOp
+    | Input String
+    | ConnectTo
+    | DisconnectFrom
 
 
 init : ( Model, Cmd Msg )
 init =
-    Model.init
-        ! [ RailsWebSocket.connect socketUrl channel ]
+    Model.init ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -34,7 +37,22 @@ update msg model =
             { model | events = model.events ++ [ event ] } ! []
 
         SendMsg ->
-            model ! [ RailsWebSocket.perform socketUrl "sendMessage" channel ]
+            model
+                ! [ RailsWebSocket.perform socketUrl
+                        channel
+                        "sendMessage"
+                        [ ( "msg", Json.Encode.string model.msgToSend ) ]
+                  ]
+
+        Input msg ->
+            { model | msgToSend = msg } ! []
+
+        ConnectTo ->
+            model ! [ RailsWebSocket.connect socketUrl channel ]
+
+        DisconnectFrom ->
+            { model | status = Disconnected, events = [] }
+                ! [ RailsWebSocket.disconnect socketUrl channel ]
 
         NoOp ->
             model ! []
@@ -74,5 +92,11 @@ main =
         { init = init
         , update = update
         , subscriptions = subscriptions
-        , view = view { sendMsg = SendMsg }
+        , view =
+            view
+                { sendMsg = SendMsg
+                , onInput = Input
+                , disconnect = DisconnectFrom
+                , connect = ConnectTo
+                }
         }
